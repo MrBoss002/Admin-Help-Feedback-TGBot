@@ -12,5 +12,9 @@ A custom, open-source Telegram bot designed for seamless customer support and us
 * **Language:** JavaScript (Node.js)
 * **Framework:** Telegraf
 
+## 📱 Connect & Support
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/MrBoss002)
+[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/MrBoss002_)
+
 ---
-*Created and maintained by [MrBoss002]*
+*Created and maintained by [MrBoss002](https://github.com/MrBoss002)*
