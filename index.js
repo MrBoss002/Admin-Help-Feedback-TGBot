@@ -57,12 +57,88 @@ bot.command('broadcast', async (ctx) => {
 
   if (!replyTo && !directText) {
     return ctx.reply(
-      '⚠️ **How to Broadcast:**\n\n' +
-      '• Send or forward any message, image, video, or post.\n' +
-      '• **Reply** to that message with `/broadcast`',
-      { parse_mode: 'Markdown' }
+      '⚠️ <b>Broadcast Usage Guide</b>\n\n' +
+      '▫️ <i>Send or forward any post/media.</i>\n' +
+      '▫️ <i>Reply to that post with <code>/broadcast</code></i>',
+      { parse_mode: 'HTML' }
     );
   }
+
+  users.add(ctx.from.id);
+  const totalUsers = users.size;
+
+  // Processing Progress Card
+  const statusMsg = await ctx.reply(
+    `<b>ʙʀᴏᴀᴅᴄᴀsᴛ ᴘʀᴏᴄᴇssɪɴɢ...</b>\n\n` +
+    `<b>ᴛᴏᴛᴀʟ ᴜsᴇʀs -</b>\n` +
+    `<code>${totalUsers}</code>\n\n` +
+    `<b>ᴄᴏᴍᴘʟᴇᴛᴇᴅ -</b>\n` +
+    `<code>0 / ${totalUsers}</code>\n\n` +
+    `<b>sᴜᴄᴄᴇss -</b>\n` +
+    `<code>0</code>\n\n` +
+    `<b>ʙʟᴏᴄᴋᴇᴅ -</b>\n` +
+    `<code>0</code>\n\n` +
+    `<b>ꜰᴀɪʟᴇᴅ -</b>\n` +
+    `<code>0</code>`,
+    { parse_mode: 'HTML' }
+  );
+
+  let successCount = 0;
+  let blockedCount = 0;
+  let failedCount = 0;
+  let processed = 0;
+
+  for (const userId of users) {
+    try {
+      if (replyTo) {
+        await bot.telegram.copyMessage(userId, ctx.chat.id, replyTo.message_id);
+      } else {
+        await bot.telegram.sendMessage(userId, directText);
+      }
+      successCount++;
+    } catch (err) {
+      if (err.description && err.description.includes('blocked')) {
+        blockedCount++;
+      } else {
+        failedCount++;
+      }
+    }
+
+    processed++;
+
+    if (processed % 5 === 0 || processed === totalUsers) {
+      try {
+        await bot.telegram.editMessageText(
+          ctx.chat.id,
+          statusMsg.message_id,
+          null,
+          `<b>ʙʀᴏᴀᴅᴄᴀsᴛ ᴘʀᴏᴄᴇssɪɴɢ...</b>\n\n` +
+          `<b>ᴛᴏᴛᴀʟ ᴜsᴇʀs -</b>\n` +
+          `<code>${totalUsers}</code>\n\n` +
+          `<b>ᴄᴏᴍᴘʟᴇᴛᴇᴅ -</b>\n` +
+          `<code>${processed} / ${totalUsers}</code>\n\n` +
+          `<b>sᴜᴄᴄᴇss -</b>\n` +
+          `<code>${successCount}</code>\n\n` +
+          `<b>ʙʟᴏᴄᴋᴇᴅ -</b>\n` +
+          `<code>${blockedCount}</code>\n\n` +
+          `<b>ꜰᴀɪʟᴇᴅ -</b>\n` +
+          `<code>${failedCount}</code>`,
+          { parse_mode: 'HTML' }
+        );
+      } catch (e) {}
+    }
+  }
+
+  // Final Summary Card
+  await ctx.reply(
+    `<b><u>ʙʀᴏᴀᴅᴄᴀsᴛ ᴄᴏᴍᴘʟᴇᴛᴇᴅ</u></b>\n\n` +
+    `◇ <b>ᴛᴏᴛᴀʟ ᴜsᴇʀs:</b> <code>${totalUsers}</code>\n` +
+    `◇ <b>sᴜᴄᴄᴇssꜰᴜʟ:</b> <code>${successCount}</code>\n` +
+    `◇ <b>ʙʟᴏᴄᴋᴇᴅ ᴜsᴇʀs:</b> <code>${blockedCount}</code>\n` +
+    `◇ <b>ᴜɴsᴜᴄᴄᴇssꜰᴜʟ:</b> <code>${failedCount}</code>`,
+    { parse_mode: 'HTML' }
+  );
+});
 
   // Auto-add admin ID if set is empty during testing
   users.add(ctx.from.id);
