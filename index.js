@@ -7,15 +7,15 @@ const ADMIN_ID = parseInt(process.env.ADMIN_ID);
 const bot = new Telegraf(BOT_TOKEN);
 const app = express();
 
-// Store user IDs in memory for broadcasting
+// Store user IDs in memory
 const users = new Set();
 
-// Keep-Alive Server for cloud hosting
+// Keep-Alive Server
 app.get('/', (req, res) => res.send('Admin Support Bot is running!'));
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// Start command with professional welcome message & inline buttons
+// Start Command
 bot.start((ctx) => {
   const userId = ctx.from.id;
   users.add(userId);
@@ -42,7 +42,13 @@ bot.start((ctx) => {
   );
 });
 
-// Broadcast Command: Reply to ANY message/media post with /broadcast
+// Stats Command (Admin Only)
+bot.command('stats', (ctx) => {
+  if (ctx.from.id !== ADMIN_ID) return;
+  ctx.reply(`📊 **Bot Statistics:**\n\nTotal Users in Database: **${users.size}**`, { parse_mode: 'Markdown' });
+});
+
+// Broadcast Command (Admin Only)
 bot.command('broadcast', async (ctx) => {
   if (ctx.from.id !== ADMIN_ID) return;
 
@@ -58,12 +64,11 @@ bot.command('broadcast', async (ctx) => {
     );
   }
 
-  const totalUsers = users.size;
-  if (totalUsers === 0) {
-    return ctx.reply('No users found in database to broadcast.');
-  }
+  // Auto-add admin ID if set is empty during testing
+  users.add(ctx.from.id);
 
-  // Send initial progress card
+  const totalUsers = users.size;
+
   const statusMsg = await ctx.reply(
     `⏳ **BROADCAST PROCESSING...**\n\n` +
     `**TOTAL USERS:** ${totalUsers}\n` +
@@ -80,7 +85,6 @@ bot.command('broadcast', async (ctx) => {
   for (const userId of users) {
     try {
       if (replyTo) {
-        // Copies exact message (text, media, formatting, buttons)
         await bot.telegram.copyMessage(userId, ctx.chat.id, replyTo.message_id);
       } else {
         await bot.telegram.sendMessage(userId, directText);
@@ -88,13 +92,11 @@ bot.command('broadcast', async (ctx) => {
       successCount++;
     } catch (err) {
       failCount++;
-      console.error(`Failed to send to ${userId}:`, err.message);
     }
 
     processed++;
 
-    // Update status message every 10 users to avoid rate limits
-    if (processed % 10 === 0 || processed === totalUsers) {
+    if (processed % 5 === 0 || processed === totalUsers) {
       try {
         await bot.telegram.editMessageText(
           ctx.chat.id,
@@ -107,13 +109,10 @@ bot.command('broadcast', async (ctx) => {
           `**FAILED:** ${failCount}`,
           { parse_mode: 'Markdown' }
         );
-      } catch (e) {
-        // Ignore edit errors
-      }
+      } catch (e) {}
     }
   }
 
-  // Final completion summary card
   await ctx.reply(
     `📌 **<u>Broadcast Completed</u>**\n\n` +
     `◇ **Total Users:** ${totalUsers}\n` +
@@ -123,15 +122,16 @@ bot.command('broadcast', async (ctx) => {
   );
 });
 
-// Main message handler
+// Main Message Handler
 bot.on('message', async (ctx) => {
   const senderId = ctx.from.id;
+  const text = ctx.message.text || '';
 
-  // 1. IF ADMIN IS REPLYING TO A FORWARDED MESSAGE -> Send response to user
+  // Skip commands starting with /
+  if (text.startsWith('/')) return;
+
+  // 1. IF ADMIN IS SENDING A MESSAGE
   if (senderId === ADMIN_ID) {
-    // Ignore if replying with the broadcast command itself
-    if (ctx.message.text && ctx.message.text.startsWith('/broadcast')) return;
-
     const replyTo = ctx.message.reply_to_message;
     if (!replyTo) {
       return ctx.reply('To answer a user, reply directly to their forwarded message!');
@@ -161,7 +161,7 @@ bot.on('message', async (ctx) => {
     return;
   }
 
-  // 2. IF REGULAR USER SENDS A MESSAGE -> Save ID & Forward to Admin silently
+  // 2. IF REGULAR USER SENDS A MESSAGE
   users.add(senderId);
 
   const userInfo = `📩 **New Support Message**\nFrom: ${ctx.from.first_name} ${ctx.from.last_name || ''}\nUsername: @${ctx.from.username || 'None'}\nID: \`${senderId}\``;
