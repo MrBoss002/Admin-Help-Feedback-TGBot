@@ -1,4 +1,4 @@
-const { Telegraf } = require('telegraf');
+const { Telegraf, Markup } = require('telegraf');
 const express = require('express');
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
@@ -15,11 +15,31 @@ app.get('/', (req, res) => res.send('Admin Support Bot is running!'));
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// Start command
+// Start command with professional welcome message & inline buttons
 bot.start((ctx) => {
   const userId = ctx.from.id;
   users.add(userId);
-  ctx.reply('Hello! Send your message or question here. Our admin team will reply to you shortly.');
+
+  const welcomeMessage = 
+    `👋 **Welcome to Support & Feedback Bot!**\n\n` +
+    `Send your message, question, or order inquiry here. Our admin team will receive it privately and reply to you directly.\n\n` +
+    `⚠️ **Important Rules & Info:**\n` +
+    `• Please state your question clearly in a single message.\n` +
+    `• Do not spam, flood, or send unwanted promotional links.\n` +
+    `• Your identity stays private—only admins will see your message.`;
+
+  return ctx.replyWithMarkdown(
+    welcomeMessage,
+    Markup.inlineKeyboard([
+      [
+        Markup.button.url('📢 Updates', 'https://t.me/Mallu_Hub_TG'),
+        Markup.button.url('📦 Bot Repo', 'https://github.com/MrBoss002/Admin-Help-Feedback-TGBot')
+      ],
+      [
+        Markup.button.url('👨‍💻 Developer GitHub', 'https://github.com/MrBoss002')
+      ]
+    ])
+  );
 });
 
 // Broadcast Command for Admin: /broadcast Your Message Here
@@ -78,7 +98,7 @@ bot.on('message', async (ctx) => {
     return;
   }
 
-  // 2. IF REGULAR USER SENDS A MESSAGE -> Save ID & Forward to Admin
+  // 2. IF REGULAR USER SENDS A MESSAGE -> Save ID & Forward to Admin silently
   users.add(senderId);
 
   const userInfo = `📩 **New Support Message**\nFrom: ${ctx.from.first_name} ${ctx.from.last_name || ''}\nUsername: @${ctx.from.username || 'None'}\nID: \`${senderId}\``;
@@ -86,7 +106,6 @@ bot.on('message', async (ctx) => {
   try {
     await bot.telegram.sendMessage(ADMIN_ID, userInfo, { parse_mode: 'Markdown' });
     await ctx.copyMessage(ADMIN_ID);
-    ctx.reply('Your message has been received! We will reply soon.');
   } catch (err) {
     console.error('Error forwarding message to admin:', err);
   }
