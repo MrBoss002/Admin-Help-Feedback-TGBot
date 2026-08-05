@@ -174,7 +174,9 @@ bot.on('message', async (ctx) => {
   }
 });
 
-bot.launch();
+bot.launch({ dropPendingUpdates: true })
+  .then(() => console.log('Bot successfully started!'))
+  .catch((err) => console.error('Bot launch error:', err.message));
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
