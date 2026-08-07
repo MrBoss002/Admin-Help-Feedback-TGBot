@@ -140,64 +140,6 @@ bot.command('broadcast', async (ctx) => {
   );
 });
 
-  // Auto-add admin ID if set is empty during testing
-  users.add(ctx.from.id);
-
-  const totalUsers = users.size;
-
-  const statusMsg = await ctx.reply(
-    `⏳ *BROADCAST PROCESSING...*\n\n` +
-    `*TOTAL USERS:* ${totalUsers}\n` +
-    `*COMPLETED:* 0 / ${totalUsers}\n` +
-    `*SUCCESS:* 0\n` +
-    `*FAILED:* 0`,
-    { parse_mode: 'Markdown' }
-  );
-
-  let successCount = 0;
-  let failCount = 0;
-  let processed = 0;
-
-  for (const userId of users) {
-    try {
-      if (replyTo) {
-        await bot.telegram.copyMessage(userId, ctx.chat.id, replyTo.message_id);
-      } else {
-        await bot.telegram.sendMessage(userId, directText);
-      }
-      successCount++;
-    } catch (err) {
-      failCount++;
-    }
-
-    processed++;
-
-    if (processed % 5 === 0 || processed === totalUsers) {
-      try {
-        await bot.telegram.editMessageText(
-          ctx.chat.id,
-          statusMsg.message_id,
-          null,
-          `⏳ **BROADCAST PROCESSING...**\n\n` +
-          `**TOTAL USERS:** ${totalUsers}\n` +
-          `**COMPLETED:** ${processed} / ${totalUsers}\n` +
-          `**SUCCESS:** ${successCount}\n` +
-          `**FAILED:** ${failCount}`,
-          { parse_mode: 'Markdown' }
-        );
-      } catch (e) {}
-    }
-  }
-
-  await ctx.reply(
-    `📌 **<u>Broadcast Completed</u>**\n\n` +
-    `◇ **Total Users:** ${totalUsers}\n` +
-    `◇ **Successful:** ${successCount}\n` +
-    `◇ **Failed / Blocked:** ${failCount}`,
-    { parse_mode: 'HTML' }
-  );
-});
-
 // Main Message Handler
 bot.on('message', async (ctx) => {
   const senderId = ctx.from.id;
@@ -245,6 +187,7 @@ bot.on('message', async (ctx) => {
   try {
     await bot.telegram.sendMessage(ADMIN_ID, userInfo, { parse_mode: 'Markdown' });
     await ctx.copyMessage(ADMIN_ID);
+    await ctx.reply('✅ Your message has been sent to our support team. We will get back to you shortly!');
   } catch (err) {
     console.error('Error forwarding message to admin:', err);
   }
