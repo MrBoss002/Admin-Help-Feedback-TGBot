@@ -146,11 +146,11 @@ bot.command('broadcast', async (ctx) => {
   const totalUsers = users.size;
 
   const statusMsg = await ctx.reply(
-    `⏳ **BROADCAST PROCESSING...**\n\n` +
-    `**TOTAL USERS:** ${totalUsers}\n` +
-    `**COMPLETED:** 0 / ${totalUsers}\n` +
-    `**SUCCESS:** 0\n` +
-    `**FAILED:** 0`,
+    `⏳ *BROADCAST PROCESSING...*\n\n` +
+    `*TOTAL USERS:* ${totalUsers}\n` +
+    `*COMPLETED:* 0 / ${totalUsers}\n` +
+    `*SUCCESS:* 0\n` +
+    `*FAILED:* 0`,
     { parse_mode: 'Markdown' }
   );
 
